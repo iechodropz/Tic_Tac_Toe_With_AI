@@ -103,6 +103,8 @@ function computerMove() {
 
 	placeMark(cell);
 
+	cell.removeEventListener("click", handleClick);
+
 	if (checkIfWin(false) === true) {
 		endGame(false);
 
