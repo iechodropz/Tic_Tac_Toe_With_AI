@@ -122,14 +122,12 @@ function minimax(depth, isMaximizingPlayer) {
 	let win = checkIfWin(true);
 
 	if (win && WHOSE_TURN === PLAYER_TURN) {
-		return endGame(false) - depth;
+		return endGame(false);
 	} else if (win === true && WHOSE_TURN === COMPUTER_TURN) {
-		return endGame(false) + depth;
+		return endGame(false);
 	} else if (checkIfDraw(true) === true) {
 		return endGame(true);
 	}
-
-	switchTurns();
 
 	if (isMaximizingPlayer) {
 		let maxScore = -Infinity;
@@ -139,7 +137,11 @@ function minimax(depth, isMaximizingPlayer) {
 			if (BOARD_COPY[i] === "") {
 				BOARD_COPY[i] = PLAYER_TURN;
 
+				switchTurns();
+
 				score = minimax(depth + 1, false);
+
+				switchTurns();
 
 				BOARD_COPY[i] = "";
 
@@ -156,7 +158,11 @@ function minimax(depth, isMaximizingPlayer) {
 			if (BOARD_COPY[i] === "") {
 				BOARD_COPY[i] = COMPUTER_TURN;
 
+				switchTurns();
+
 				score = minimax(depth + 1, true);
+
+				switchTurns();
 
 				BOARD_COPY[i] = "";
 
