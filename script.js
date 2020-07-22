@@ -1,13 +1,13 @@
-const X_TURN = "x";
-const CIRCLE_TURN = "circle";
+const PLAYER_TURN = "x";
+const COMPUTER_TURN = "circle";
 
-let whoseTurn;
+let WHOSE_TURN;
 
 const cellElements = document.querySelectorAll("[data-cell]");
 const board = document.getElementById("board");
 const winDrawMessageElement = document.querySelector("[win-draw-message]");
 const winDrawScreenElement = document.getElementById("winDrawScreen");
-const restartButtonElement = document.getElementById("restartButton");
+const restartButtonElement = document.querySelector("[restart-button]");
 
 restartButtonElement.addEventListener("click", startGame);
 
@@ -22,54 +22,149 @@ const WINNING_COMBINATIONS = [
 	[2, 4, 6],
 ];
 
+const BOARD_COPY = ["", "", "", "", "", "", "", "", ""];
+
 startGame();
 
 function startGame() {
 	winDrawScreenElement.classList.remove("show");
 
-	whoseTurn = X_TURN;
+	WHOSE_TURN = PLAYER_TURN;
 
 	cellElements.forEach((cell) => {
-		cell.classList.remove(X_TURN);
-		cell.classList.remove(CIRCLE_TURN);
+		cell.classList.remove(PLAYER_TURN);
+		cell.classList.remove(COMPUTER_TURN);
 		cell.addEventListener("click", handleClick, { once: true });
+
+		let i = [[...cellElements].indexOf(cell)];
+		BOARD_COPY[i] = "";
 	});
 
 	setBoardHoverEffects();
 }
 
-function handleClick(e) {
-	const cell = e.target;
+function handleClick(cellClicked) {
+	if (WHOSE_TURN === PLAYER_TURN) {
+		placeMark(cellClicked.target);
 
-	let currentTurn;
+		if (checkIfWin(false) === true) {
+			endGame(false);
 
-	if (whoseTurn === X_TURN) {
-		currentTurn = X_TURN;
+			winDrawScreenElement.classList.add("show");
+		} else if (checkIfDraw(false) === true) {
+			endGame(true);
+
+			winDrawScreenElement.classList.add("show");
+		} else {
+			switchTurns();
+
+			computerMove();
+		}
+	}
+}
+
+function placeMark(cell) {
+	cell.classList.add(WHOSE_TURN);
+
+	BOARD_COPY[[...cellElements].indexOf(cell)] = WHOSE_TURN;
+}
+
+function switchTurns() {
+	if (WHOSE_TURN === PLAYER_TURN) {
+		WHOSE_TURN = COMPUTER_TURN;
 	} else {
-		currentTurn = CIRCLE_TURN;
+		WHOSE_TURN = PLAYER_TURN;
+	}
+}
+
+function computerMove() {
+	let bestScore = Infinity;
+	let bestMove;
+	let score;
+
+	for (let i = 0; i < 9; i++) {
+		if (BOARD_COPY[i] === "") {
+			BOARD_COPY[i] = COMPUTER_TURN;
+
+			score = minimax(0, true);
+
+			BOARD_COPY[i] = "";
+
+			if (score < bestScore) {
+				bestScore = score;
+				bestMove = i;
+			}
+		}
 	}
 
-	placeMark(cell, currentTurn);
+	WHOSE_TURN = COMPUTER_TURN;
 
-	if (checkIfWin(currentTurn) === true) {
+	let cell = cellElements[bestMove];
+
+	placeMark(cell);
+
+	if (checkIfWin(false) === true) {
 		endGame(false);
-	} else if (checkIfDraw() === true) {
+
+		winDrawScreenElement.classList.add("show");
+	} else if (checkIfDraw(false) === true) {
 		endGame(true);
+
+		winDrawScreenElement.classList.add("show");
 	} else {
 		switchTurns();
+
 		setBoardHoverEffects();
 	}
 }
 
-function placeMark(cell, currentTurn) {
-	cell.classList.add(currentTurn);
-}
+function minimax(depth, isMaximizingPlayer) {
+	let win = checkIfWin(true);
 
-function switchTurns() {
-	if (whoseTurn === X_TURN) {
-		whoseTurn = CIRCLE_TURN;
+	if (win && WHOSE_TURN === PLAYER_TURN) {
+		return endGame(false) - depth;
+	} else if (win === true && WHOSE_TURN === COMPUTER_TURN) {
+		return endGame(false) + depth;
+	} else if (checkIfDraw(true) === true) {
+		return endGame(true);
+	}
+
+	switchTurns();
+
+	if (isMaximizingPlayer) {
+		let maxScore = -Infinity;
+		let score;
+
+		for (let i = 0; i < 9; i++) {
+			if (BOARD_COPY[i] === "") {
+				BOARD_COPY[i] = PLAYER_TURN;
+
+				score = minimax(depth + 1, false);
+
+				BOARD_COPY[i] = "";
+
+				maxScore = Math.max(score, maxScore);
+			}
+		}
+
+		return maxScore;
 	} else {
-		whoseTurn = X_TURN;
+		let minScore = Infinity;
+		let score;
+
+		for (let i = 0; i < 9; i++) {
+			if (BOARD_COPY[i] === "") {
+				BOARD_COPY[i] = COMPUTER_TURN;
+
+				score = minimax(depth + 1, true);
+
+				BOARD_COPY[i] = "";
+
+				minScore = Math.min(score, minScore);
+			}
+		}
+
+		return minScore;
 	}
 }
 
@@ -77,40 +172,68 @@ function endGame(draw) {
 	if (draw) {
 		winDrawMessageElement.innerText = "Draw!";
 		winDrawMessageElement.style.color = "white";
+
+		return 0;
 	} else {
-		if (whoseTurn === X_TURN) {
+		if (WHOSE_TURN === PLAYER_TURN) {
 			winDrawMessageElement.innerText = "X's Win!";
 			winDrawMessageElement.style.color = "blue";
+
+			return 10;
 		} else {
 			winDrawMessageElement.innerText = "O's Win!";
 			winDrawMessageElement.style.color = "red";
+
+			return -10;
 		}
 	}
-
-	winDrawScreenElement.classList.add("show");
 }
 
 function setBoardHoverEffects() {
-	board.classList.remove(X_TURN);
-	board.classList.remove(CIRCLE_TURN);
+	board.classList.remove(PLAYER_TURN);
+	board.classList.remove(COMPUTER_TURN);
 
-	if (whoseTurn === X_TURN) {
-		board.classList.add(X_TURN);
+	board.classList.add(WHOSE_TURN);
+}
+
+function checkIfWin(boardCopy) {
+	if (boardCopy) {
+		if (WHOSE_TURN === PLAYER_TURN) {
+			for (let i = 0; i < 8; i++) {
+				if (BOARD_COPY[WINNING_COMBINATIONS[i][0]] === "x" && BOARD_COPY[WINNING_COMBINATIONS[i][1]] === "x" && BOARD_COPY[WINNING_COMBINATIONS[i][2]] === "x") {
+					return true;
+				}
+			}
+		} else if (WHOSE_TURN === COMPUTER_TURN) {
+			for (let i = 0; i < 8; i++) {
+				if (BOARD_COPY[WINNING_COMBINATIONS[i][0]] === "circle" && BOARD_COPY[WINNING_COMBINATIONS[i][1]] === "circle" && BOARD_COPY[WINNING_COMBINATIONS[i][2]] === "circle") {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	} else {
-		board.classList.add(CIRCLE_TURN);
+		return WINNING_COMBINATIONS.some((combination) => {
+			return combination.every((index) => {
+				return cellElements[index].classList.contains(WHOSE_TURN);
+			});
+		});
 	}
 }
 
-function checkIfWin(currentTurn) {
-	return WINNING_COMBINATIONS.some((combination) => {
-		return combination.every((index) => {
-			return cellElements[index].classList.contains(currentTurn);
-		});
-	});
-}
+function checkIfDraw(boardCopy) {
+	if (boardCopy) {
+		for (i = 0; i < 9; i++) {
+			if (BOARD_COPY[i] === "") {
+				return false;
+			}
+		}
 
-function checkIfDraw() {
-	return [...cellElements].every((cell) => {
-		return cell.classList.contains(X_TURN) || cell.classList.contains(CIRCLE_TURN);
-	});
+		return true;
+	} else {
+		return [...cellElements].every((cell) => {
+			return cell.classList.contains(PLAYER_TURN) || cell.classList.contains(COMPUTER_TURN);
+		});
+	}
 }
