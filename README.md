@@ -1,1 +1,1 @@
-# Tic-Tac-Toe Game, Player vs AI (Unbetable AI)
+# Tic-Tac-Toe Game, Player vs AI (Unbeatable AI)
