@@ -182,9 +182,9 @@ function minimax(depth, isMaximizingPlayer) {
 	let win = checkIfWin(true);
 
 	if (win && WHOSE_TURN === PLAYER_TURN) {
-		return endGame(false);
+		return endGame(false) - depth;
 	} else if (win === true && WHOSE_TURN === COMPUTER_TURN) {
-		return endGame(false);
+		return endGame(false) + depth;
 	} else if (checkIfDraw(true) === true) {
 		return endGame(true);
 	}
