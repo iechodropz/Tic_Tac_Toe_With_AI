@@ -157,8 +157,6 @@ function computerMove() {
 		}
 	}
 
-	WHOSE_TURN = COMPUTER_TURN;
-
 	let cell = CELL_ELEMENTS[bestMove];
 
 	placeMark(cell);
